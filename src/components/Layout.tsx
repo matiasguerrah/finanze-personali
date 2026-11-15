@@ -5,6 +5,7 @@ import { useOpenEntry } from '../state/entry';
 import { useRecurring } from '../db/hooks';
 import { attentionCount } from '../lib/recurring';
 import { todayRome } from '../lib/dates';
+import { SyncBadge } from '../sync/SyncBadge';
 
 const NAV = [
   { to: '/', label: 'Home', icon: House, end: true },
@@ -23,6 +24,7 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/altro\/conti/, 'Conti'],
   [/^\/altro\/soglie/, 'Soglie di spesa'],
   [/^\/altro\/profilo/, 'Profilo'],
+  [/^\/altro\/sync/, 'Sincronizzazione'],
   [/^\/altro/, 'Altro'],
 ];
 
@@ -74,6 +76,9 @@ export function Layout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-line bg-bg/95 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 backdrop-blur">
           <h1 className="text-xl font-semibold">{title}</h1>
+          <div className="-my-2 ml-auto sm:order-last sm:ml-0">
+            <SyncBadge />
+          </div>
           {FILTERED.test(pathname) && <ScopeFilterBar className="ml-auto w-full sm:w-auto" />}
         </header>
 

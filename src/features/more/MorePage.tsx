@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Briefcase, ChevronRight, Gauge, UserRound, Wallet } from 'lucide-react';
+import { Briefcase, ChevronRight, Cloud, Gauge, UserRound, Wallet } from 'lucide-react';
 
 const ITEMS = [
   {
@@ -19,6 +19,12 @@ const ITEMS = [
     label: 'Soglie e notifiche',
     hint: 'Limiti di spesa per giorno, settimana o mese',
     icon: Gauge,
+  },
+  {
+    to: '/altro/sync',
+    label: 'Sincronizzazione',
+    hint: 'Google Sheet, stato e ultimo invio',
+    icon: Cloud,
   },
   {
     to: '/altro/attivita',

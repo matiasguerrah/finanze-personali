@@ -6,13 +6,15 @@
 import type { Table } from 'dexie';
 import { db as defaultDb, type ContiDB } from './db';
 import type { BaseRecord, NewRecord, SyncedRecordMap, SyncedTable } from './types';
+import { shouldApplyRemote } from '../lib/sync/merge';
+import { newUuid } from '../lib/ids';
 
 export function nowIso(): string {
   return new Date().toISOString();
 }
 
 export function newId(): string {
-  return crypto.randomUUID();
+  return newUuid();
 }
 
 export function createRepo(db: ContiDB = defaultDb) {
@@ -94,12 +96,36 @@ export function createRepo(db: ContiDB = defaultDb) {
     });
   }
 
+  /**
+   * Applies records received from sync (last-write-wins on updatedAt). Not enqueued: they already
+   * are on the server. A pending local change that is not newer than the remote one is obsolete
+   * and leaves the outbox. Returns how many records were applied.
+   */
+  async function applyRemote<T extends SyncedTable>(
+    name: T,
+    records: SyncedRecordMap[T][],
+  ): Promise<number> {
+    return db.transaction('rw', db.table(name), db.outbox, async () => {
+      let applied = 0;
+      for (const r of records) {
+        const local = await table(name).get(r.id);
+        if (!shouldApplyRemote(local, r)) continue;
+        await table(name).put(r);
+        const pending = await db.outbox.where({ table: name, recordId: r.id }).first();
+        if (pending?.seq !== undefined && pending.payload.updatedAt <= r.updatedAt)
+          await db.outbox.delete(pending.seq);
+        applied++;
+      }
+      return applied;
+    });
+  }
+
   /** Runs several repo writes atomically (e.g. the two halves of a split). */
   function atomically<R>(fn: () => Promise<R>): Promise<R> {
     return db.transaction('rw', [...db.tables.filter((t) => t.name !== 'settings')], fn);
   }
 
-  return { create, update, softDelete, restore, putRaw, atomically };
+  return { create, update, softDelete, restore, putRaw, applyRemote, atomically };
 }
 
 export const repo = createRepo();

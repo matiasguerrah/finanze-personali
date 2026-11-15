@@ -98,31 +98,33 @@ export function TransactionsPage() {
         <p className="py-12 text-center text-muted">Nessun movimento in questo mese.</p>
       )}
 
-      {groups.map((g) => (
-        <section key={g.date} aria-label={formatDayHeading(g.date)}>
-          <header className="flex items-baseline justify-between px-2 pb-1 text-sm text-muted">
-            <h3 className="font-medium first-letter:uppercase">{formatDayHeading(g.date)}</h3>
-            <Amount cents={g.netCents} />
-          </header>
-          <ul className="flex flex-col divide-y divide-line">
-            {g.items.map((tx) => (
-              <TransactionRow
-                key={tx.id}
-                tx={tx}
-                category={byId(categories, tx.categoryId)}
-                account={byId(accounts, tx.accountId)}
-                toAccount={byId(accounts, tx.toAccountId)}
-                onEdit={() => openEntry({ mode: 'edit', tx })}
-                onDelete={() => void remove(tx)}
-                onSplit={
-                  tx.type === 'expense' && !tx.splitGroupId ? () => setSplitting(tx) : undefined
-                }
-                onMerge={tx.splitGroupId ? () => void mergeSplit(tx) : undefined}
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {/* Wait for categories too, or rows would flash "Senza categoria" on first load. */}
+      {categories.length > 0 &&
+        groups.map((g) => (
+          <section key={g.date} aria-label={formatDayHeading(g.date)}>
+            <header className="flex items-baseline justify-between px-2 pb-1 text-sm text-muted">
+              <h3 className="font-medium first-letter:uppercase">{formatDayHeading(g.date)}</h3>
+              <Amount cents={g.netCents} />
+            </header>
+            <ul className="flex flex-col divide-y divide-line">
+              {g.items.map((tx) => (
+                <TransactionRow
+                  key={tx.id}
+                  tx={tx}
+                  category={byId(categories, tx.categoryId)}
+                  account={byId(accounts, tx.accountId)}
+                  toAccount={byId(accounts, tx.toAccountId)}
+                  onEdit={() => openEntry({ mode: 'edit', tx })}
+                  onDelete={() => void remove(tx)}
+                  onSplit={
+                    tx.type === 'expense' && !tx.splitGroupId ? () => setSplitting(tx) : undefined
+                  }
+                  onMerge={tx.splitGroupId ? () => void mergeSplit(tx) : undefined}
+                />
+              ))}
+            </ul>
+          </section>
+        ))}
 
       {splitting && <SplitSheet tx={splitting} onClose={() => setSplitting(null)} />}
     </div>
