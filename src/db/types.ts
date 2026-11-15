@@ -139,6 +139,23 @@ export interface TaxParams extends BaseRecord {
   revenueThresholdCents: number;
 }
 
+/**
+ * The owner's identity data. A single record with the fixed id PROFILE_ID, so devices that create
+ * it independently converge on the same row. The ATECO codes live in `activities` (they change
+ * over time), not here. Every field may be empty.
+ */
+export interface Profile extends BaseRecord {
+  firstName: string;
+  lastName: string;
+  /** Partita IVA, 11 digits without the IT prefix. */
+  vatNumber: string;
+  /** Codice fiscale, uppercase. */
+  taxCode: string;
+  pec: string;
+}
+
+export const PROFILE_ID = '00000000-0000-4000-8000-000000009001';
+
 /** Local-only key/value store (never synced). */
 export interface Setting {
   key: string;
@@ -154,6 +171,7 @@ export const SYNCED_TABLES = [
   'recurring',
   'debts',
   'taxParams',
+  'profile',
 ] as const;
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
 
@@ -166,6 +184,7 @@ export interface SyncedRecordMap {
   recurring: Recurring;
   debts: Debt;
   taxParams: TaxParams;
+  profile: Profile;
 }
 
 /** Local-only queue of changes waiting to be pushed. One row per (table, recordId). */

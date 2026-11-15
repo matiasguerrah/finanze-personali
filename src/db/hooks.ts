@@ -1,7 +1,17 @@
 /** Reactive read hooks (Dexie liveQuery). Soft-deleted rows are always excluded. */
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db';
-import type { Account, Activity, Category, ISODate, Recurring, Transaction } from './types';
+import { PROFILE_ID } from './types';
+import type {
+  Account,
+  Activity,
+  Budget,
+  Category,
+  ISODate,
+  Profile,
+  Recurring,
+  Transaction,
+} from './types';
 import { accountBalances } from '../lib/balances';
 
 const EMPTY: never[] = [];
@@ -60,5 +70,17 @@ export function useAccountUsage(): Map<string, number> | undefined {
       });
     await db.recurring.filter((r) => !r.deleted).each((r) => inc(r.accountId));
     return m;
+  }, []);
+}
+
+export function useBudgets(): Budget[] | undefined {
+  return useLiveQuery(() => db.budgets.filter((b) => !b.deleted).toArray(), []);
+}
+
+/** The owner profile; null when never saved. */
+export function useProfile(): Profile | null | undefined {
+  return useLiveQuery(async () => {
+    const p = await db.profile.get(PROFILE_ID);
+    return p && !p.deleted ? p : null;
   }, []);
 }

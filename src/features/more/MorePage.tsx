@@ -1,12 +1,24 @@
 import { Link } from 'react-router-dom';
-import { Briefcase, ChevronRight, Wallet } from 'lucide-react';
+import { Briefcase, ChevronRight, Gauge, UserRound, Wallet } from 'lucide-react';
 
 const ITEMS = [
+  {
+    to: '/altro/profilo',
+    label: 'Profilo',
+    hint: 'Nome, partita IVA, codice fiscale, PEC',
+    icon: UserRound,
+  },
   {
     to: '/altro/conti',
     label: 'Conti',
     hint: 'Saldi, giroconti, conti archiviati',
     icon: Wallet,
+  },
+  {
+    to: '/altro/soglie',
+    label: 'Soglie e notifiche',
+    hint: 'Limiti di spesa per giorno, settimana o mese',
+    icon: Gauge,
   },
   {
     to: '/altro/attivita',

@@ -21,6 +21,8 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/report/, 'Report'],
   [/^\/altro\/attivita/, 'Attività professionali'],
   [/^\/altro\/conti/, 'Conti'],
+  [/^\/altro\/soglie/, 'Soglie di spesa'],
+  [/^\/altro\/profilo/, 'Profilo'],
   [/^\/altro/, 'Altro'],
 ];
 

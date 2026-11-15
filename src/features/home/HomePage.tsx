@@ -18,6 +18,7 @@ import { useOpenEntry } from '../../state/entry';
 import { Segmented } from '../../components/Segmented';
 import { Amount } from '../../components/Amount';
 import { CategoryGrid } from '../quick-entry/CategoryGrid';
+import { BudgetsSummary } from '../budgets/BudgetsSummary';
 
 export function HomePage() {
   const [type, setType] = useState<CategoryType>('expense');
@@ -98,6 +99,8 @@ export function HomePage() {
         scope={scope}
         onPick={(c) => openEntry({ mode: 'new', type, categoryId: c.id })}
       />
+
+      <BudgetsSummary scope={scope} />
     </div>
   );
 }

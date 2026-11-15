@@ -6,6 +6,7 @@ import type {
   Category,
   Debt,
   OutboxEntry,
+  Profile,
   Recurring,
   Setting,
   TaxParams,
@@ -21,6 +22,7 @@ export class ContiDB extends Dexie {
   recurring!: EntityTable<Recurring, 'id'>;
   debts!: EntityTable<Debt, 'id'>;
   taxParams!: EntityTable<TaxParams, 'id'>;
+  profile!: EntityTable<Profile, 'id'>;
   settings!: EntityTable<Setting, 'key'>;
   outbox!: EntityTable<OutboxEntry, 'seq'>;
 
@@ -40,6 +42,8 @@ export class ContiDB extends Dexie {
       settings: 'key',
       outbox: '++seq, &[table+recordId]',
     });
+    // v2: owner profile (single record, synced).
+    this.version(2).stores({ profile: 'id' });
   }
 }
 

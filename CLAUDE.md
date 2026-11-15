@@ -39,6 +39,9 @@ GitHub Pages builds set `BASE_PATH=/<repo>/` (read in `vite.config.ts`). Routing
 - In the keypad the scope is proposed as business if the category _or_ account defaults to business (`proposedScope`), until the user taps the toggle.
 - Transfers are `type: 'transfer'` with `accountId` → `toAccountId` and empty `categoryId`; they move balances but never count as income/expense. Balances (`src/lib/balances.ts`) only include transactions dated ≤ today.
 - Recurring: month-based frequencies return to `anchorDay` after short months (`advanceDueDate` in `src/lib/recurring.ts`); `amountCents: 0` means "da definire". "Segna come pagata"/"Salta" live in `src/features/recurring/actions.ts` and return an `undo`. The 4 fiscal deadlines are seed step 2 (`taxKind` set).
+- Budgets (`src/lib/budgets.ts`) count only expenses in the current day/ISO week/month. `AlertWatcher` (mounted once in `App.tsx`) recomputes them on every data change and announces each level once per period: keys like `budget:<id>:<periodStart>:warn|over` stored in the `shownAlerts` setting. Toasts stack (max 3) so alerts never hide an "Annulla".
+- Local notifications go through the service worker (`src/state/notify.ts`; click handler in `public/sw-notify.js`, imported via `workbox.importScripts`). On iOS they need the installed PWA (`notificationSupport` → `needsInstall`). Due-date reminders fire only when the app is opened.
+- The owner profile (name, partita IVA, codice fiscale, PEC) is the synced table `profile` with a single record `PROFILE_ID` (Dexie v2), saved via `saveProfile` (`src/features/profile/actions.ts`); validators in `src/lib/profile.ts`. ATECO codes are NOT in the profile: they belong to `activities`.
 - "Dividi" keeps the personal part on the original record and creates the business part; both share `splitGroupId` (`src/features/transactions/actions.ts`).
 
 ## UI conventions

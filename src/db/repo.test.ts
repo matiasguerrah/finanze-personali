@@ -114,3 +114,21 @@ describe('seed', () => {
     expect(dates).toEqual(['2027-06-30', '2026-11-30', '2027-06-30', '2026-11-30']);
   });
 });
+
+describe('schema upgrade', () => {
+  it('v1 → v2 keeps existing data and adds the profile table', async () => {
+    const { default: Dexie } = await import('dexie');
+    const name = `upgrade-${crypto.randomUUID()}`;
+    const v1 = new Dexie(name);
+    v1.version(1).stores({ categories: 'id, type, sortOrder', outbox: '++seq, &[table+recordId]' });
+    await v1.table('categories').put({ id: 'c1', name: 'Bar', type: 'expense', sortOrder: 1 });
+    v1.close();
+
+    const upgraded = new ContiDB(name);
+    await upgraded.open();
+    expect(upgraded.verno).toBe(2);
+    expect((await upgraded.categories.get('c1'))?.name).toBe('Bar');
+    expect(await upgraded.profile.count()).toBe(0);
+    await upgraded.delete();
+  });
+});
