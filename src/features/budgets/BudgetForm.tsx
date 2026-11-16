@@ -63,6 +63,13 @@ export function BudgetForm({ budget: b, categories, onClose }: Props) {
           { value: 'global', label: 'Tutte le spese' },
         ]}
       />
+      {target === 'global' && (
+        <p className="-mt-2 text-sm text-muted">
+          Imposta sostitutiva e contributi INPS non vengono conteggiati: sono pagamenti obbligati
+          che farebbero saltare qualsiasi limite. Per tenerli d’occhio crea una soglia sulla loro
+          categoria.
+        </p>
+      )}
       {target === 'category' && (
         <label className={labelClass}>
           Categoria

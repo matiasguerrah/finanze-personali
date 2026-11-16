@@ -6,6 +6,7 @@ import {
   budgetLabel,
   coveringRange,
   evaluateBudgets,
+  excludedFromGlobalBudgets,
   pendingBudgetAlerts,
   pruneAlertKeys,
 } from '../lib/budgets';
@@ -38,7 +39,7 @@ export function AlertWatcher() {
   useEffect(() => {
     if (budgets === undefined || txs === undefined || recurring === undefined) return;
     if (categories.length === 0) return;
-    const evals = evaluateBudgets(budgets, txs, today);
+    const evals = evaluateBudgets(budgets, txs, today, excludedFromGlobalBudgets(categories));
 
     queue.current = queue.current.then(async () => {
       const shown = new Set(await getSetting<string[]>(SHOWN_SETTING, []));

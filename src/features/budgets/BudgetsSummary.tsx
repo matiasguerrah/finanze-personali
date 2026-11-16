@@ -2,7 +2,13 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useBudgets, useCategories, useTransactionsBetween } from '../../db/hooks';
 import type { ScopeFilter } from '../../db/types';
-import { budgetLabel, coveringRange, evaluateBudgets, PERIOD_LABEL } from '../../lib/budgets';
+import {
+  budgetLabel,
+  coveringRange,
+  evaluateBudgets,
+  excludedFromGlobalBudgets,
+  PERIOD_LABEL,
+} from '../../lib/budgets';
 import { todayRome } from '../../lib/dates';
 import { BudgetBar } from './BudgetBar';
 
@@ -20,8 +26,8 @@ export function BudgetsSummary({ scope }: { scope: ScopeFilter }) {
   const range = useMemo(() => coveringRange(visible, today), [visible, today]);
   const txs = useTransactionsBetween(range.from, range.to);
 
-  if (!txs || visible.length === 0) return null;
-  const evals = evaluateBudgets(visible, txs, today).sort(
+  if (!txs || visible.length === 0 || categories.length === 0) return null;
+  const evals = evaluateBudgets(visible, txs, today, excludedFromGlobalBudgets(categories)).sort(
     (a, b) => ORDER[a.status] - ORDER[b.status],
   );
   if (evals.length === 0) return null;

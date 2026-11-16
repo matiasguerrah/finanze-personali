@@ -1,5 +1,5 @@
 /** Budget thresholds ("soglie"): spending per period, status and alert de-duplication. */
-import type { Budget, BudgetPeriod, ISODate, Transaction } from '../db/types';
+import type { Budget, BudgetPeriod, Category, ISODate, Transaction } from '../db/types';
 import { BP_100 } from './money';
 import { dayRange, monthRange, weekRange, type DateRange } from './dates';
 
@@ -25,17 +25,43 @@ type TxLike = Pick<
   'type' | 'amountCents' | 'scope' | 'categoryId' | 'date' | 'deleted'
 >;
 
-/** True if the transaction counts towards the budget (expenses only, matching scope/category). */
-export function countsTowards(b: BudgetLike, t: TxLike): boolean {
-  if (t.deleted || t.type !== 'expense') return false;
-  if (b.scope !== 'all' && b.scope !== t.scope) return false;
-  return b.target === 'global' || t.categoryId === b.categoryId;
+/**
+ * Categories that "all expenses" budgets ignore: the substitute tax and INPS contributions are
+ * obligations with fixed amounts and dates, and a single payment would blow any spending budget.
+ * Recognised by systemKey, so renaming them changes nothing. Category budgets still count them.
+ */
+export function excludedFromGlobalBudgets(
+  categories: Pick<Category, 'id' | 'systemKey'>[],
+): ReadonlySet<string> {
+  return new Set(
+    categories
+      .filter((c) => c.systemKey === 'inps' || c.systemKey === 'substituteTax')
+      .map((c) => c.id),
+  );
 }
 
-export function spentInRange(b: BudgetLike, txs: TxLike[], range: DateRange): number {
+/** True if the transaction counts towards the budget (expenses only, matching scope/category). */
+export function countsTowards(
+  b: BudgetLike,
+  t: TxLike,
+  excludedFromGlobal: ReadonlySet<string>,
+): boolean {
+  if (t.deleted || t.type !== 'expense') return false;
+  if (b.scope !== 'all' && b.scope !== t.scope) return false;
+  if (b.target === 'category') return t.categoryId === b.categoryId;
+  return !excludedFromGlobal.has(t.categoryId);
+}
+
+export function spentInRange(
+  b: BudgetLike,
+  txs: TxLike[],
+  range: DateRange,
+  excludedFromGlobal: ReadonlySet<string>,
+): number {
   let total = 0;
   for (const t of txs)
-    if (t.date >= range.from && t.date <= range.to && countsTowards(b, t)) total += t.amountCents;
+    if (t.date >= range.from && t.date <= range.to && countsTowards(b, t, excludedFromGlobal))
+      total += t.amountCents;
   return total;
 }
 
@@ -67,17 +93,21 @@ export interface BudgetEvaluation<B> {
   status: BudgetStatus;
 }
 
-/** Evaluates every active, non-deleted budget for the period containing `date`. */
+/**
+ * Evaluates every active, non-deleted budget for the period containing `date`.
+ * `excludedFromGlobal` comes from excludedFromGlobalBudgets (required so no caller forgets it).
+ */
 export function evaluateBudgets<B extends Budget>(
   budgets: B[],
   txs: TxLike[],
   date: ISODate,
+  excludedFromGlobal: ReadonlySet<string>,
 ): BudgetEvaluation<B>[] {
   return budgets
     .filter((b) => b.active && !b.deleted)
     .map((budget) => {
       const range = periodRange(budget.period, date);
-      const spentCents = spentInRange(budget, txs, range);
+      const spentCents = spentInRange(budget, txs, range, excludedFromGlobal);
       return {
         budget,
         range,

@@ -10,6 +10,7 @@ import {
   countsTowards,
   coveringRange,
   evaluateBudgets,
+  excludedFromGlobalBudgets,
   pendingBudgetAlerts,
   periodRange,
   progressBp,
@@ -50,6 +51,8 @@ const tx = (
   ...extra,
 });
 
+const NONE: ReadonlySet<string> = new Set();
+
 describe('periodRange', () => {
   it('day, ISO week from Monday, month', () => {
     expect(periodRange('daily', '2026-11-15')).toEqual({ from: '2026-11-15', to: '2026-11-15' });
@@ -66,13 +69,39 @@ describe('periodRange', () => {
 describe('countsTowards', () => {
   it('only expenses, matching scope and category', () => {
     const b = budget({ scope: 'personal', target: 'category', categoryId: 'food' });
-    expect(countsTowards(b, tx(100))).toBe(true);
-    expect(countsTowards(b, tx(100, { type: 'income' }))).toBe(false);
-    expect(countsTowards(b, tx(100, { type: 'transfer' }))).toBe(false);
-    expect(countsTowards(b, tx(100, { scope: 'business' }))).toBe(false);
-    expect(countsTowards(b, tx(100, { categoryId: 'bar' }))).toBe(false);
-    expect(countsTowards(b, tx(100, { deleted: true }))).toBe(false);
-    expect(countsTowards(budget({}), tx(100, { scope: 'business', categoryId: 'x' }))).toBe(true);
+    expect(countsTowards(b, tx(100), NONE)).toBe(true);
+    expect(countsTowards(b, tx(100, { type: 'income' }), NONE)).toBe(false);
+    expect(countsTowards(b, tx(100, { type: 'transfer' }), NONE)).toBe(false);
+    expect(countsTowards(b, tx(100, { scope: 'business' }), NONE)).toBe(false);
+    expect(countsTowards(b, tx(100, { categoryId: 'bar' }), NONE)).toBe(false);
+    expect(countsTowards(b, tx(100, { deleted: true }), NONE)).toBe(false);
+    expect(countsTowards(budget({}), tx(100, { scope: 'business', categoryId: 'x' }), NONE)).toBe(
+      true,
+    );
+  });
+
+  it('"all expenses" budgets ignore substitute tax and INPS, category budgets do not', () => {
+    const fiscal = new Set(['inps', 'tax']);
+    const global = budget({ scope: 'business' });
+    const inpsTx = tx(250000, { scope: 'business', categoryId: 'inps' });
+    expect(countsTowards(global, inpsTx, fiscal)).toBe(false);
+    expect(countsTowards(global, tx(100, { scope: 'business', categoryId: 'sw' }), fiscal)).toBe(
+      true,
+    );
+    const onInps = budget({ scope: 'business', target: 'category', categoryId: 'inps' });
+    expect(countsTowards(onInps, inpsTx, fiscal)).toBe(true);
+  });
+});
+
+describe('excludedFromGlobalBudgets', () => {
+  it('picks categories by systemKey, not by name', () => {
+    const ids = excludedFromGlobalBudgets([
+      { id: 'a', systemKey: 'inps' },
+      { id: 'b', systemKey: 'substituteTax' },
+      { id: 'c', systemKey: 'invoices' },
+      { id: 'd' },
+    ]);
+    expect([...ids].sort()).toEqual(['a', 'b']);
   });
 });
 
@@ -100,12 +129,28 @@ describe('evaluateBudgets', () => {
       ],
       [tx(6000), tx(3000, { date: '2026-11-02' }), tx(5000, { date: '2026-10-31' })],
       '2026-11-15',
+      NONE,
     );
     expect(evals.map((e) => [e.budget.id, e.spentCents, e.status])).toEqual([
       ['m', 9000, 'warn'],
       ['d', 6000, 'ok'],
     ]);
     expect(evals[0]!.remainingCents).toBe(1000);
+  });
+
+  it('30 November: tax payments do not blow the business budget', () => {
+    const fiscal = new Set(['inps', 'tax']);
+    const [e] = evaluateBudgets(
+      [budget({ scope: 'business', limitCents: 50000 })],
+      [
+        tx(32000, { scope: 'business', categoryId: 'sw', date: '2026-11-10' }),
+        tx(120000, { scope: 'business', categoryId: 'tax', date: '2026-11-30' }),
+        tx(250000, { scope: 'business', categoryId: 'inps', date: '2026-11-30' }),
+      ],
+      '2026-11-30',
+      fiscal,
+    );
+    expect(e).toMatchObject({ spentCents: 32000, status: 'ok' });
   });
 });
 

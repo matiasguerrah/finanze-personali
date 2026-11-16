@@ -3,7 +3,13 @@ import { Plus } from 'lucide-react';
 import { useBudgets, useCategories, useTransactionsBetween } from '../../db/hooks';
 import { repo } from '../../db/repo';
 import type { Budget } from '../../db/types';
-import { budgetLabel, coveringRange, evaluateBudgets, PERIOD_LABEL } from '../../lib/budgets';
+import {
+  budgetLabel,
+  coveringRange,
+  evaluateBudgets,
+  excludedFromGlobalBudgets,
+  PERIOD_LABEL,
+} from '../../lib/budgets';
 import { todayRome } from '../../lib/dates';
 import { RowMenu } from '../../components/RowMenu';
 import { primaryButton } from '../../components/form';
@@ -21,8 +27,9 @@ export function BudgetsPage() {
   const range = useMemo(() => coveringRange(budgets ?? [], today), [budgets, today]);
   const txs = useTransactionsBetween(range.from, range.to);
 
-  if (budgets === undefined || txs === undefined) return null;
-  const active = evaluateBudgets(budgets, txs, today);
+  // Categories are needed to exclude taxes/INPS from "all expenses" budgets.
+  if (budgets === undefined || txs === undefined || categories.length === 0) return null;
+  const active = evaluateBudgets(budgets, txs, today, excludedFromGlobalBudgets(categories));
   const inactive = budgets.filter((b) => !b.active);
   const label = (b: Budget) => budgetLabel(b, categories.find((c) => c.id === b.categoryId)?.name);
 
@@ -90,6 +97,11 @@ export function BudgetsPage() {
       <button type="button" onClick={() => setEditing('new')} className={primaryButton}>
         <Plus size={20} aria-hidden="true" /> Nuova soglia
       </button>
+
+      <p className="px-1 text-xs text-muted">
+        Le soglie su “tutte le spese” escludono imposta sostitutiva e contributi INPS. Le soglie su
+        una singola categoria contano tutto.
+      </p>
 
       {inactive.length > 0 && (
         <section aria-labelledby="inactive-h">
