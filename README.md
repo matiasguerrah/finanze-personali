@@ -14,6 +14,50 @@ Funziona senza connessione: i dati stanno sul dispositivo e si sincronizzano con
 - **Avvisi email** facoltativi dallo script Apps Script (vedi sotto).
 - Un filtro globale **Tutto / Personale / Lavoro** vale per home, movimenti, report ed export.
 
+## Guida all'uso
+
+### Movimenti
+
+- Tocca una categoria in **Home** (o il pulsante **+**) e inserisci l'importo col tastierino. Puoi cambiare conto, data, nota, tag e **Personale/Lavoro**; l'ambito proposto è "Lavoro" se lo è la categoria o il conto, finché non tocchi l'interruttore.
+- Un **incasso di lavoro** richiede l'attività attiva in quella data (se ce n'è una sola è già scelta), più facoltativamente numero di fattura e cliente.
+- Una **spesa** si può collegare a un debito: conta come pagamento di quel debito.
+- **Giroconto**: sposta denaro tra due conti; cambia i saldi ma non è né entrata né uscita.
+- In **Movimenti** scorri i mesi; dal menu di una riga: Modifica, **Dividi Personale/Lavoro** (la parte personale resta sul movimento, quella di lavoro diventa un movimento collegato; "Annulla divisione" le riunisce), Elimina con **Annulla**.
+
+### Conti e saldo
+
+- **Altro › Conti**: saldo iniziale, tipo, ambito predefinito. Un conto usato da movimenti non si elimina: si **archivia** (sparisce dalle scelte, i dati restano).
+- Il **Saldo conti** in Home è il denaro sui conti: saldo iniziale + entrate − uscite ± giroconti, contando solo i movimenti con data fino a oggi.
+- **I debiti non entrano nel saldo**: se hai 50 € sul conto e 100 € di debiti non ancora pagati, il saldo resta +50 €. Il residuo dei debiti è in **Altro › Debiti**; il saldo cala solo quando registri un pagamento.
+
+### Scadenze
+
+- Ricorrenze mensili, bimestrali, trimestrali, annuali o ogni N giorni, con giorni di preavviso. Le mensili tornano al giorno scelto dopo i mesi corti (31 gen → 28 feb → 31 mar).
+- Importo vuoto = "da definire"; "stimato" mostra "~".
+- **Segna come pagata** registra il movimento (importo, data e conto modificabili) e passa alla scadenza successiva; **Salta** passa oltre senza movimento. Entrambe si annullano dal messaggio.
+- Le quattro scadenze fiscali (imposta e contributi, 30 giugno e 30 novembre) sono già presenti; l'importo può essere proposto dalla stima del forfettario.
+- Il numero sull'icona **Scadenze** conta quelle scadute o entro il preavviso.
+
+### Soglie di spesa e notifiche
+
+- **Altro › Soglie e notifiche**: limite per giorno, settimana (da lunedì) o mese, su tutte le spese o su una categoria, per Tutto/Personale/Lavoro, con avviso a una percentuale (predefinita 80%).
+- Le soglie su "tutte le spese" **escludono imposta sostitutiva e contributi INPS**; quelle su una categoria contano tutto.
+- Ogni livello (avviso, superata) viene segnalato una sola volta per periodo, con un messaggio in app e, se l'app è in secondo piano, una notifica di sistema. Le notifiche delle scadenze arrivano all'apertura dell'app.
+
+### Debiti
+
+- **Altro › Debiti** gestisce due stati:
+  - **Avviso** (cartella, multa, avviso bonario): importo e scadenza; mostra quanto manca e i giorni alla scadenza.
+  - **Rateizzato** (prestito o avviso rateizzato): capitale, tasso annuo, data della prima rata e la rata mensile _oppure_ il numero di rate; l'app calcola il piano (ammortamento alla francese, al centesimo).
+- **Registra pagamento / Registra rata** apre l'inserimento già compilato e collegato al debito. I pagamenti coprono le rate in ordine: un pagamento in più copre le successive, ritardi e anticipi spostano la data di estinzione.
+- **Rateizza** trasforma un avviso in un piano, proponendo come capitale quanto resta da pagare; i pagamenti fatti prima della rateizzazione restano all'avviso.
+- Il dettaglio mostra residuo, interessi, rate pagate e in ritardo, grafico del residuo e piano completo.
+
+### Profilo e attività
+
+- **Altro › Profilo**: nome, partita IVA, codice fiscale e PEC, con controllo di validità. Si sincronizza come gli altri dati.
+- **Altro › Attività professionali**: vedi [Stima del forfettario](#stima-del-forfettario).
+
 ## Sviluppo locale
 
 Requisiti: Node 20 o superiore.
@@ -54,7 +98,9 @@ In **Report**: panoramica (entrate/uscite, categorie, ultimi 12 mesi, soglie), s
 
 - **CSV** dei movimenti del periodo (separatore `;`, virgola decimale: si apre direttamente in Excel italiano).
 - **Excel completo**: riepilogo, movimenti, movimenti professionali, riepilogo professionale dell'anno e un foglio per ogni tabella.
-- **Backup JSON** di tutti i dati e **ripristino**: aggiunge i record mancanti e le versioni più recenti, non cancella nulla, e invia al Google Sheet ciò che ripristina.
+- **Backup JSON** di tutti i dati e **ripristino**: prima mostra quanti record aggiunge e aggiorna, poi aggiunge i record mancanti e le versioni più recenti, non cancella nulla, e invia al Google Sheet ciò che ripristina.
+
+Il periodo e il filtro Tutto/Personale/Lavoro scelti valgono anche per l'export. Su iPhone, nell'app installata, un download apre il pannello di condivisione: scegli **Salva in File**.
 
 ## Stima del forfettario
 
@@ -97,13 +143,26 @@ I dati vivono sul dispositivo (IndexedDB) e vengono copiati in un Google Sheet t
 
 1. Crea un Google Sheet vuoto, ad esempio "Conti – dati".
 2. Apri **Estensioni › Apps Script**, sostituisci il contenuto di `Code.gs` con [`apps-script/Code.gs`](apps-script/Code.gs) e salva. Da **Impostazioni progetto** attiva "Mostra il file manifest appsscript.json nell'editor" e copia anche [`apps-script/appsscript.json`](apps-script/appsscript.json): imposta il fuso Europe/Rome e il runtime V8.
-3. Seleziona la funzione **`setup`** e premi **Esegui**, poi autorizza lo script. `setup` crea un tab per ogni tabella e genera la **chiave segreta**, che trovi nel **Registro di esecuzione**.
+3. Nella tendina accanto a **▷ Esegui** scegli la funzione **`setup`** e premi **Esegui**, poi autorizza lo script (se compare "Google non ha verificato questa app": **Avanzate › Vai a … (non sicuro) › Consenti**; è normale, lo script è tuo). `setup` crea un tab per ogni tabella e genera la **chiave segreta**, che trovi nel **Registro di esecuzione**.
 4. **Esegui il deployment › Nuovo deployment › App web** con "Esegui come: **me**" e "Chi ha accesso: **chiunque**". Copia l'URL che termina con `/exec`.
 5. Nell'app apri **Altro › Sincronizzazione**, incolla URL e chiave e premi **Collega**. Ripeti su ogni dispositivo.
 
 "Chiunque" è necessario perché l'app non fa il login Google. Senza la chiave segreta lo script rifiuta qualsiasi richiesta. URL e chiave restano solo nel dispositivo (tabella locale `settings`) e non finiscono mai nello Sheet.
 
-Se modifichi `Code.gs`, pubblica con **Gestisci deployment › Modifica (matita) › Versione: nuova versione**: così l'URL resta lo stesso.
+### Aggiornare lo script
+
+Quando `apps-script/Code.gs` cambia nel repository, l'editor Apps Script **non** si aggiorna da solo:
+
+1. Apri https://raw.githubusercontent.com/matiasguerrah/finanze-personali/main/apps-script/Code.gs, seleziona tutto (⌘A) e copia.
+2. Nell'editor apri `Code.gs`, seleziona tutto (⌘A), incolla e salva (⌘S).
+3. Controllo: nella tendina accanto a **▷ Esegui** devono comparire anche `installAlertsTrigger`, `checkAlerts` e `dailySummary` (se l'elenco finisce con `rowToObject`, è ancora la versione vecchia).
+
+Cosa usa quale versione:
+
+- **Sincronizzazione** (`doPost`): usa la versione _pubblicata_ nel deployment, non quella salvata nell'editor. Serve ripubblicare solo se cambia la sincronizzazione: **Esegui il deployment › Gestisci deployment › Modifica (matita) › Versione: nuova versione** (l'URL resta lo stesso).
+- **Avvisi email** (trigger): usano sempre il codice _salvato_ nell'editor. Basta salvare.
+
+Non serve rieseguire `setup`: non rigenera la chiave e non tocca i dati.
 
 ### Come funziona
 
@@ -131,10 +190,26 @@ Le email arrivano all'account Google proprietario dello script. Per un altro ind
 
 I trigger non toccano la sincronizzazione: non serve un nuovo deployment.
 
+Per verificare:
+
+- Icona **sveglia (Trigger)** nella barra laterale dell'editor: `checkAlerts` "Ogni ora" (e `dailySummary` se attivato).
+- Icona **Esecuzioni**: ogni ora compare `checkAlerts` "Completata". Se un'esecuzione fallisce, Google manda un'email di errore.
+- Per provare subito, scegli `checkAlerts` nella tendina e premi **Esegui**: se c'è qualcosa di nuovo da segnalare l'email arriva subito; rieseguendo non arriva più nulla.
+- Per ricevere di nuovo tutti gli avvisi già inviati (solo per prova), elimina la proprietà `SENT_ALERTS` in **Impostazioni progetto › Proprietà script**.
+
 ## Icone
 
-La sorgente è [`public/favicon.svg`](public/favicon.svg). I PNG (`pwa-192.png`, `pwa-512.png`, `pwa-maskable-512.png` a tutto campo per Android, `apple-touch-icon.png` 180×180 senza trasparenza per iOS) sono generati da quell'SVG; se lo cambi, rigenerali alle stesse dimensioni.
+La sorgente è [`public/favicon.svg`](public/favicon.svg). I PNG (`pwa-192.png`, `pwa-512.png`, `pwa-maskable-512.png` a tutto campo per Android, `apple-touch-icon.png` 180×180 senza trasparenza per iOS) sono generati da quell'SVG; se lo cambi, rigenerali alle stesse dimensioni. Su telefono la nuova icona compare solo reinstallando l'app (rimuovila e aggiungila di nuovo alla schermata Home; con la sincronizzazione attiva i dati tornano dallo Sheet).
 
 ## Accessibilità
 
 Contrasto AA in tema chiaro e scuro, focus sempre visibile, pulsante "Vai al contenuto", target di almeno 44 px, icone sempre con etichetta testuale, grafici con tabella equivalente per screen reader. Verificato con axe-core (WCAG 2.1 A/AA) su tutte le schermate e nei pannelli principali.
+
+## Problemi comuni
+
+- **Un dispositivo mostra dati diversi dall'altro**: premi **Altro › Sincronizzazione › Sincronizza ora** su entrambi. La sincronizzazione parte anche da sola tornando sull'app (se l'ultimo tentativo è di almeno 2 minuti prima).
+- **Su iPhone mancano dati inseriti da Safari** (o viceversa): Safari e l'app installata hanno database separati; usa l'app installata e collega lì la sincronizzazione.
+- **Le notifiche non arrivano su iPhone**: servono l'app installata (iOS 16.4+) e il permesso concesso da **Altro › Soglie e notifiche**. Le notifiche dell'app partono solo quando la apri; per avvisi ad app chiusa usa gli avvisi email.
+- **Nessuna email di avviso**: controlla che l'editor abbia il `Code.gs` aggiornato e che il trigger esista (vedi [Avvisi email](#avvisi-email-facoltativi)); gli avvisi vedono solo i dati già sincronizzati.
+- **Una riga dello Sheet viene ignorata**: è stata modificata a mano con un valore non valido; il dettaglio è in **Altro › Sincronizzazione**.
+- **Dopo un aggiornamento vedo ancora la versione vecchia**: chiudi e riapri l'app; si aggiorna da sola al primo avvio dopo il deploy.
