@@ -2,7 +2,17 @@
 
 PWA personale per le finanze personali e professionali (regime forfettario), offline-first, con un Google Sheet come database.
 
-> Il README completo (Google Sheet, Apps Script, deploy, installazione come PWA) arriverà nella fase 8.
+Funziona senza connessione: i dati stanno sul dispositivo e si sincronizzano con un Google Sheet tuo quando c'è rete. Non c'è nessun altro server e nessun account da creare.
+
+## Cosa fa
+
+- **Inserimento rapido** da griglia di categorie e tastierino, con interruttore **Personale/Lavoro** (le spese di lavoro e quelle personali possono stare sullo stesso conto), giroconti, tag, "Dividi" per separare una spesa in parte personale e parte di lavoro.
+- **Conti** con saldi, **scadenze** ricorrenti con promemoria (comprese le quattro scadenze fiscali del forfettario), **soglie di spesa** per giorno, settimana o mese con avvisi.
+- **Debiti**: prestiti con piano di ammortamento, avvisi di pagamento e rateizzazioni, residuo e data di estinzione.
+- **Report**, export CSV/Excel e backup (vedi sotto).
+- **Stima del forfettario** (vedi sotto).
+- **Avvisi email** facoltativi dallo script Apps Script (vedi sotto).
+- Un filtro globale **Tutto / Personale / Lavoro** vale per home, movimenti, report ed export.
 
 ## Sviluppo locale
 
@@ -25,6 +35,18 @@ Ogni push su `main` avvia il workflow `.github/workflows/deploy.yml`: lint, test
 Il repository è pubblico ma contiene solo il codice: i dati stanno nel browser di ogni dispositivo e nel tuo Google Sheet; URL e chiave dello script si inseriscono in **Altro › Sincronizzazione** e restano sul dispositivo.
 
 Dopo un aggiornamento, l'app scarica la nuova versione in background all'apertura e si ricarica da sola; i dati non vengono toccati.
+
+## Installazione come app
+
+Apri https://matiasguerrah.github.io/finanze-personali/ e:
+
+- **iPhone / iPad** (Safari): pulsante **Condividi › Aggiungi alla schermata Home**. Le notifiche locali funzionano solo dall'app installata (iOS 16.4 o successivo): attivale in **Altro › Soglie e notifiche**.
+- **Android** (Chrome): menu **⋮ › Installa app** (o "Aggiungi a schermata Home").
+- **Computer** (Chrome, Edge): icona **Installa** nella barra degli indirizzi, oppure menu › **Installa Conti**. Safari su Mac: **File › Aggiungi al Dock**.
+
+Ogni dispositivo ha il suo database: collega la sincronizzazione su ciascuno (stesso URL e stessa chiave). Su iPhone il browser Safari e l'app installata sono due spazi separati: usa sempre l'app installata.
+
+Le notifiche dell'app (soglie e scadenze) partono solo quando la apri; per avvisi che arrivano anche ad app chiusa attiva gli **avvisi email**.
 
 ## Report, export e backup
 
@@ -91,3 +113,28 @@ Se modifichi `Code.gs`, pubblica con **Gestisci deployment › Modifica (matita)
 - **Cancellazioni**: sono logiche (`deleted = TRUE`), quindi arrivano anche agli altri dispositivi.
 - Lo Sheet ha un tab per tabella e tutte le celle in testo semplice. Le colonne nuove vengono aggiunte in automatico quando l'app le invia. `_serverUpdatedAt` è l'ora di scrittura sul server e cresce sempre.
 - Se modifichi a mano una cella in modo non valido (ad esempio `4,50` in `amountCents`), quella riga viene ignorata e segnalata in **Altro › Sincronizzazione**. Le altre righe passano.
+
+## Avvisi email (facoltativi)
+
+Lo stesso script può mandarti un'email, anche quando l'app è chiusa:
+
+- **Ogni ora** (`checkAlerts`): soglie di spesa raggiunte o superate, scadenze in arrivo o scadute (comprese quelle fiscali), soglia ricavi all'80%, al 95% e superata. Manda un'email solo se c'è qualcosa di nuovo e non ripete mai lo stesso avviso (le chiavi già inviate stanno nelle proprietà dello script, `SENT_ALERTS`).
+- **Ogni mattina verso le 8** (`dailySummary`, facoltativo): le spese del giorno prima, separate tra personali e di lavoro. Se non ci sono spese non manda nulla.
+
+Per attivarli, dopo aver aggiornato `Code.gs` nell'editor Apps Script:
+
+1. Seleziona **`installAlertsTrigger`** e premi **Esegui**; autorizza l'invio di email e l'esecuzione in background.
+2. Se vuoi anche il riepilogo, esegui **`installDailySummaryTrigger`**.
+3. Per spegnere tutto: **`removeAllTriggers`**.
+
+Le email arrivano all'account Google proprietario dello script. Per un altro indirizzo aggiungi in **Impostazioni progetto › Proprietà script** la proprietà `ALERT_EMAIL`. Gli avvisi usano i dati presenti nello Sheet, quindi vedono le modifiche dopo la sincronizzazione. Gli avvisi email e quelli dell'app sono indipendenti: lo stesso avviso può arrivare in entrambi.
+
+I trigger non toccano la sincronizzazione: non serve un nuovo deployment.
+
+## Icone
+
+La sorgente è [`public/favicon.svg`](public/favicon.svg). I PNG (`pwa-192.png`, `pwa-512.png`, `pwa-maskable-512.png` a tutto campo per Android, `apple-touch-icon.png` 180×180 senza trasparenza per iOS) sono generati da quell'SVG; se lo cambi, rigenerali alle stesse dimensioni.
+
+## Accessibilità
+
+Contrasto AA in tema chiaro e scuro, focus sempre visibile, pulsante "Vai al contenuto", target di almeno 44 px, icone sempre con etichetta testuale, grafici con tabella equivalente per screen reader. Verificato con axe-core (WCAG 2.1 A/AA) su tutte le schermate e nei pannelli principali.

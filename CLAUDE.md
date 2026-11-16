@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-"Conti": offline-first PWA for one user's personal + professional finances (Italian _regime forfettario_). UI language Italian, code/comments English, currency EUR, locale it-IT, timezone Europe/Rome, weeks start Monday. Stack: Vite + React 18 + TS strict, Tailwind v4, Dexie, vite-plugin-pwa, lucide-react, date-fns (`it`). Sync goes to a Google Sheet through an Apps Script web app (`apps-script/`); there is no other backend. Work proceeds in phases (plan: `~/.claude/plans/quizzical-discovering-shamir.md`); stop after each phase with a summary and test instructions.
+"Conti": offline-first PWA for one user's personal + professional finances (Italian _regime forfettario_). UI language Italian, code/comments English, currency EUR, locale it-IT, timezone Europe/Rome, weeks start Monday. Stack: Vite + React 18 + TS strict, Tailwind v4, Dexie, vite-plugin-pwa, lucide-react, date-fns (`it`). Sync goes to a Google Sheet through an Apps Script web app (`apps-script/`); there is no other backend. Built in 8 phases (plan: `~/.claude/plans/quizzical-discovering-shamir.md`), all done; stop after each unit of work with a summary and test instructions.
 
 ## Commands
 
@@ -27,6 +27,7 @@ Deploy: every push to `main` runs `.github/workflows/deploy.yml` (lint, test, bu
 - **Dexie is the source of truth on device.** UI reads via `useLiveQuery` (hooks in `src/db/hooks.ts`) and never calls the network.
 - **All writes to synced tables go through `src/db/repo.ts`** (`create`/`update`/`softDelete`/`restore`/`putRaw`/`atomically`). It bumps `updatedAt` and upserts the record into `outbox` (one row per table+recordId) in the same transaction — sync depends on this. Never call `db.<table>.put/add/delete` from features. Deletes are soft (`deleted: true`); every query must filter them out.
 - **Sync** (phase 4): `src/lib/sync/merge.ts` declares the Sheet columns of every synced table (`COLUMNS`, compile-time checked against the record types: a new field without a column fails `tsc`) plus row (de)serialisation and LWW. `src/sync/engine.ts` (`runSync` = push outbox in batches, then pull since `lastPullServerTime`) is browser-independent; `src/sync/sync.ts` adds config, Web Locks and status; `SyncScheduler` triggers it. Remote records enter only via `repo.applyRemote`. The backend is `apps-script/Code.gs`; its pure functions and the full two-device flow are tested by running the real file in a VM (`src/test/appsScriptHarness.ts`) — keep Code.gs plain ES (no imports).
+- **Email alerts** (phase 8) live in `apps-script/Code.gs` (`checkAlerts` hourly, `dailySummary`, trigger installers; sent keys in Script Property `SENT_ALERTS`). Code.gs can't import `src/lib`, so it re-implements budgets/due/revenue rules with the SAME keys: if you change `lib/budgets`, `lib/recurring`, `lib/notifications` or the threshold in `lib/tax`, update Code.gs too — `src/lib/sync/alerts.test.ts` cross-checks both on rows written with `toRow`.
 - `settings` and `outbox` are local-only tables (never synced). Secrets (Apps Script URL/key) live only in `settings`.
 - **Seed data uses fixed UUIDs and `SEED_TIMESTAMP` (year 2000)** so independent devices don't create duplicates and user edits always win LWW. Seed steps in `src/db/seed.ts` are versioned: append steps, never edit/reorder existing ones.
 - Schema changes: add a new `this.version(n)` in `src/db/db.ts` (never edit an existing version, only needed for new tables/indexes), update `src/db/types.ts` and add the column to `COLUMNS` in `src/lib/sync/merge.ts` (the Sheet picks it up automatically on the next push).
@@ -52,5 +53,7 @@ Deploy: every push to `main` runs `.github/workflows/deploy.yml` (lint, test, bu
 ## UI conventions
 
 - Colour tokens are CSS variables in `src/index.css` mapped to Tailwind (`bg-bg`, `bg-surface`, `text-muted`, `text-accent`, `bg-raised`, …); dark mode only redefines variables, so don't add `dark:` classes. Category/account colours come from the single palette in `src/lib/palette.ts`; icons only from the curated registry in `src/components/icons.ts`.
+- Accessibility: AA contrast in both themes, global `:focus-visible` outline (never remove it), skip button to `#main` in `Layout` (a button, since the hash is the route), `document.title` per page. Re-run an axe-core pass on new screens.
+- Icons: `public/favicon.svg` is the source of every PNG icon (maskable and apple-touch are full-bleed).
 - Touch targets ≥ 44px (`min-h-11`), amounts use `tabular-nums` (`<Amount>`), every icon has a text label. Modals use `<Sheet>` (native `<dialog>`).
 - The quick-entry sheet is opened from anywhere via `useOpenEntry()`; its data is preloaded in `EntryProvider` so it renders complete on the first frame.

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { CalendarClock, ChartPie, House, List, Menu, Plus } from 'lucide-react';
 import { ScopeFilterBar } from './ScopeFilterBar';
@@ -47,8 +48,21 @@ export function Layout() {
       </span>
     ) : null;
 
+  // Screen readers and the browser tab name the current page.
+  useEffect(() => {
+    document.title = title === 'Conti' ? 'Conti' : `${title} · Conti`;
+  }, [title]);
+
   return (
     <div className="min-h-dvh md:flex">
+      {/* A button, not href="#main": with HashRouter the hash is the route. */}
+      <button
+        type="button"
+        onClick={() => document.getElementById('main')?.focus()}
+        className="sr-only z-50 rounded-xl bg-accent font-semibold text-accent-fg shadow-lg focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:px-4 focus:py-3"
+      >
+        Vai al contenuto
+      </button>
       {/* Desktop sidebar */}
       <nav
         aria-label="Principale"
@@ -84,7 +98,11 @@ export function Layout() {
           {FILTERED.test(pathname) && <ScopeFilterBar className="ml-auto w-full sm:w-auto" />}
         </header>
 
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-24">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-[calc(9rem+env(safe-area-inset-bottom))] md:pb-24 focus-visible:outline-none"
+        >
           <Outlet />
         </main>
       </div>

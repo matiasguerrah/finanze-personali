@@ -14,20 +14,25 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      // Final icons: public/favicon.svg is the source; PNGs rendered from it (README › Icone).
       manifest: {
+        id: './',
         name: 'Conti',
         short_name: 'Conti',
-        description: 'Finanze personali e professionali',
+        description:
+          'Spese personali e di lavoro, scadenze, soglie, debiti e stima del regime forfettario',
+        categories: ['finance', 'productivity'],
         lang: 'it-IT',
         start_url: '.',
         scope: '.',
         display: 'standalone',
         background_color: '#ffffff',
-        theme_color: '#0f766e',
+        theme_color: '#ffffff',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
       },
       workbox: {

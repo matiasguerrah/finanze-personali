@@ -29,9 +29,9 @@ export function CategoryGrid({ categories, type, scope, onPick, selectedId }: Pr
           aria-label={section.scope === 'personal' ? 'Personali' : 'Lavoro'}
         >
           {showHeadings && (
-            <h3 className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">
+            <h2 className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">
               {section.scope === 'personal' ? 'Personali' : 'Lavoro'}
-            </h3>
+            </h2>
           )}
           <ul className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-5 lg:grid-cols-6">
             {section.items.map((c) => (

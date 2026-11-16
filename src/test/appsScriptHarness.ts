@@ -80,7 +80,37 @@ export function createAppsScript() {
       return s;
     },
   };
+  const mails: { to: string; subject: string; body: string }[] = [];
+  const triggers: { handler: string; spec: string }[] = [];
+  let now = new Date();
+  const triggerBuilder = (handler: string) => {
+    const parts: string[] = [];
+    const b = {
+      timeBased: () => b,
+      everyHours: (n: number) => (parts.push(`every ${n}h`), b),
+      everyDays: (n: number) => (parts.push(`every ${n}d`), b),
+      atHour: (h: number) => (parts.push(`at ${h}`), b),
+      create: () => {
+        const t = { handler, spec: parts.join(' ') };
+        triggers.push(t);
+        return t;
+      },
+    };
+    return b;
+  };
   const context = vm.createContext({
+    MailApp: {
+      sendEmail: (to: string, subject: string, body: string) =>
+        void mails.push({ to, subject, body }),
+    },
+    Session: { getEffectiveUser: () => ({ getEmail: () => 'owner@example.com' }) },
+    ScriptApp: {
+      newTrigger: triggerBuilder,
+      getProjectTriggers: () =>
+        triggers.map((t) => ({ getHandlerFunction: () => t.handler, _t: t })),
+      deleteTrigger: (x: { _t: (typeof triggers)[number] }) =>
+        void triggers.splice(triggers.indexOf(x._t), 1),
+    },
     SpreadsheetApp: { getActiveSpreadsheet: () => spreadsheet },
     PropertiesService: {
       getScriptProperties: () => ({
@@ -95,7 +125,11 @@ export function createAppsScript() {
       MimeType: { JSON: 'json' },
       createTextOutput: (s: string) => ({ setMimeType: () => ({ content: s }) }),
     },
-    Utilities: { getUuid: () => crypto.randomUUID() },
+    Utilities: {
+      getUuid: () => crypto.randomUUID(),
+      // Only the pattern Code.gs uses ('yyyy-MM-dd'); the date is the fake clock (setNow).
+      formatDate: (_d: Date, tz: string) => now.toLocaleDateString('sv-SE', { timeZone: tz }),
+    },
     Logger: { log: () => undefined },
   });
   const path = fileURLToPath(new URL('../../apps-script/Code.gs', import.meta.url));
@@ -104,6 +138,13 @@ export function createAppsScript() {
 
   return {
     sheets,
+    props,
+    mails,
+    triggers,
+    /** Fixes "today" as seen by Code.gs alerts (todayRome_). */
+    setNow: (d: Date) => {
+      now = d;
+    },
     /** Pure functions of Code.gs, for unit tests. */
     fn: g,
     setup: () => g.setup!() as string,
