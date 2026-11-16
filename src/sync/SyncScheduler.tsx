@@ -4,25 +4,31 @@ import { db } from '../db/db';
 import { getSyncState, loadSyncState, syncNow } from './sync';
 
 const HOURLY_MS = 60 * 60 * 1000;
+/** Coming back to the app (tab switch, PWA resumed) pulls changes made on other devices. */
+const ON_RETURN_MS = 2 * 60 * 1000;
 /** After a local change, wait a little so a burst of edits goes up in one request. */
 const AFTER_CHANGE_MS = 15_000;
 
+function syncDue(lastAttemptAt: number | undefined, now: number, minGapMs: number): boolean {
+  return lastAttemptAt === undefined || now - lastAttemptAt >= minGapMs;
+}
+
 /**
- * Renders nothing. Syncs on app open, when the connection comes back, every hour while the page
- * is visible (also when it becomes visible again after an hour), and shortly after local changes.
+ * Renders nothing. Syncs on app open, when the connection comes back, when the page becomes
+ * visible again (at most every 2 minutes), every hour while it stays visible, and shortly after
+ * local changes.
  */
 export function SyncScheduler() {
   const pending = useLiveQuery(() => db.outbox.count(), []);
 
   useEffect(() => {
     void loadSyncState().then(syncNow);
-    const due = () => {
-      const last = getSyncState().lastAttemptAt;
-      return document.visibilityState === 'visible' && (!last || Date.now() - last >= HOURLY_MS);
-    };
+    const visibleAndDue = (gap: number) =>
+      document.visibilityState === 'visible' &&
+      syncDue(getSyncState().lastAttemptAt, Date.now(), gap);
     const onOnline = () => void syncNow();
-    const onVisible = () => due() && void syncNow();
-    const timer = window.setInterval(onVisible, 60_000);
+    const onVisible = () => visibleAndDue(ON_RETURN_MS) && void syncNow();
+    const timer = window.setInterval(() => visibleAndDue(HOURLY_MS) && void syncNow(), 60_000);
     window.addEventListener('online', onOnline);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
