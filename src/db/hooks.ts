@@ -46,6 +46,11 @@ export function useTransactionsBetween(from: ISODate, to: ISODate): Transaction[
   );
 }
 
+/** Every live transaction (reports need several ranges at once; volumes are small). */
+export function useAllTransactions(): Transaction[] | undefined {
+  return useLiveQuery(() => db.transactions.filter((t) => !t.deleted).toArray(), []);
+}
+
 export function useRecurring(): Recurring[] | undefined {
   return useLiveQuery(() => db.recurring.filter((r) => !r.deleted).sortBy('nextDueDate'), []);
 }

@@ -7,12 +7,12 @@ import { HomePage } from './features/home/HomePage';
 import { TransactionsPage } from './features/transactions/TransactionsPage';
 import { ActivitiesPage } from './features/activities/ActivitiesPage';
 import { MorePage } from './features/more/MorePage';
-import { ComingSoon } from './features/more/ComingSoon';
 import { AccountsPage } from './features/accounts/AccountsPage';
 import { RecurringPage } from './features/recurring/RecurringPage';
 import { BudgetsPage } from './features/budgets/BudgetsPage';
 import { ProfilePage } from './features/profile/ProfilePage';
 import { DebtsPage } from './features/debts/DebtsPage';
+import { ReportPage } from './features/report/ReportPage';
 import { DebtDetailPage } from './features/debts/DebtDetailPage';
 import { AlertWatcher } from './state/AlertWatcher';
 import { SyncScheduler } from './sync/SyncScheduler';
@@ -31,7 +31,7 @@ export default function App() {
                 <Route index element={<HomePage />} />
                 <Route path="movimenti" element={<TransactionsPage />} />
                 <Route path="scadenze" element={<RecurringPage />} />
-                <Route path="report" element={<ComingSoon what="Report e grafici" />} />
+                <Route path="report/:tab?" element={<ReportPage />} />
                 <Route path="altro" element={<MorePage />} />
                 <Route path="altro/attivita" element={<ActivitiesPage />} />
                 <Route path="altro/conti" element={<AccountsPage />} />

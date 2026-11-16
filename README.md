@@ -26,6 +26,14 @@ Il repository è pubblico ma contiene solo il codice: i dati stanno nel browser 
 
 Dopo un aggiornamento, l'app scarica la nuova versione in background all'apertura e si ricarica da sola; i dati non vengono toccati.
 
+## Report, export e backup
+
+In **Report**: panoramica (entrate/uscite, categorie, ultimi 12 mesi, soglie), sezione **Professionale** (incassi per mese, attività e cliente, spese di lavoro, incassi per anno) ed **Esporta**:
+
+- **CSV** dei movimenti del periodo (separatore `;`, virgola decimale: si apre direttamente in Excel italiano).
+- **Excel completo**: riepilogo, movimenti, movimenti professionali, riepilogo professionale dell'anno e un foglio per ogni tabella.
+- **Backup JSON** di tutti i dati e **ripristino**: aggiunge i record mancanti e le versioni più recenti, non cancella nulla, e invia al Google Sheet ciò che ripristina.
+
 ## Sincronizzazione con Google Sheet
 
 I dati vivono sul dispositivo (IndexedDB) e vengono copiati in un Google Sheet tramite uno script Apps Script, uno per persona. Non c'è nessun altro server.

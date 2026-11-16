@@ -29,8 +29,8 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/altro/, 'Altro'],
 ];
 
-/** Pages where the global Tutto/Personale/Lavoro filter applies. */
-const FILTERED = /^\/($|movimenti|report)/;
+/** Pages where the global Tutto/Personale/Lavoro filter applies (not the professional report). */
+const FILTERED = /^\/($|movimenti|report(?!\/professionale))/;
 
 export function Layout() {
   const { pathname } = useLocation();
