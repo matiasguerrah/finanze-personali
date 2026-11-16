@@ -1,5 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Banknote, Briefcase, ChevronRight, Cloud, Gauge, UserRound, Wallet } from 'lucide-react';
+import {
+  Banknote,
+  Briefcase,
+  ChevronRight,
+  Cloud,
+  Gauge,
+  Percent,
+  UserRound,
+  Wallet,
+} from 'lucide-react';
 
 const ITEMS = [
   {
@@ -37,6 +46,12 @@ const ITEMS = [
     label: 'Attività professionali',
     hint: 'Codici ATECO e coefficienti',
     icon: Briefcase,
+  },
+  {
+    to: '/altro/fiscale',
+    label: 'Parametri fiscali',
+    hint: 'Aliquote, contributi, soglia ricavi, acconti',
+    icon: Percent,
   },
 ];
 

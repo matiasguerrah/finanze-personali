@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useBudgets, useCategories, useRecurring, useTransactionsBetween } from '../db/hooks';
+import {
+  useBudgets,
+  useCategories,
+  useRecurring,
+  useTaxContext,
+  useTransactionsBetween,
+} from '../db/hooks';
 import { getSetting, setSetting } from '../db/repo';
 import {
   budgetAlertMessage,
@@ -10,10 +16,11 @@ import {
   pendingBudgetAlerts,
   pruneAlertKeys,
 } from '../lib/budgets';
-import { addDaysISO, formatShortDate, todayRome } from '../lib/dates';
+import { addDaysISO, formatShortDate, todayRome, yearOf } from '../lib/dates';
 import { formatCents } from '../lib/money';
 import { dueAlertKey, pendingDueReminders } from '../lib/notifications';
 import { dueText } from '../lib/recurring';
+import { pendingThresholdAlert, taxYear, thresholdText } from '../lib/tax';
 import { useToast } from './toast';
 import { showLocalNotification } from './notify';
 
@@ -33,11 +40,19 @@ export function AlertWatcher() {
   const recurring = useRecurring();
   const range = useMemo(() => coveringRange(budgets ?? [], today), [budgets, today]);
   const txs = useTransactionsBetween(range.from, range.to);
+  const taxCtx = useTaxContext();
+  const threshold = useMemo(() => {
+    if (!taxCtx) return undefined;
+    const year = yearOf(today);
+    const e = taxYear(taxCtx, year).estimate;
+    return e && e.threshold.limitCents > 0 ? { year, ...e.threshold } : null;
+  }, [taxCtx, today]);
   // Serialises runs: live queries can fire in quick succession.
   const queue = useRef(Promise.resolve());
 
   useEffect(() => {
     if (budgets === undefined || txs === undefined || recurring === undefined) return;
+    if (threshold === undefined) return;
     if (categories.length === 0) return;
     const evals = evaluateBudgets(budgets, txs, today, excludedFromGlobalBudgets(categories));
 
@@ -57,6 +72,19 @@ export function AlertWatcher() {
         newKeys.push(...keys);
       }
 
+      const revenueKeys =
+        threshold && pendingThresholdAlert(threshold.year, threshold.level, shown);
+      if (threshold && revenueKeys) {
+        const message = `Ricavi ${threshold.year}: ${thresholdText(threshold.level, threshold.usedBp)}`;
+        toast({ message, tone: threshold.level === 'warn' ? 'warn' : 'danger', durationMs: 8000 });
+        if (document.visibilityState !== 'visible')
+          await showLocalNotification('Conti · soglia ricavi', message, {
+            tag: revenueKeys[revenueKeys.length - 1]!,
+            path: '/report/professionale',
+          });
+        newKeys.push(...revenueKeys);
+      }
+
       for (const r of pendingDueReminders(recurring, today, shown)) {
         const amount = r.amountCents > 0 ? ` · ${formatCents(r.amountCents)}` : '';
         const sent = await showLocalNotification(
@@ -73,7 +101,7 @@ export function AlertWatcher() {
       await setSetting(SHOWN_SETTING, merged);
     });
     queue.current = queue.current.catch((err: unknown) => console.error('Alert check failed', err));
-  }, [budgets, txs, recurring, categories, today, toast]);
+  }, [budgets, txs, recurring, categories, threshold, today, toast]);
 
   return null;
 }

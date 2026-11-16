@@ -19,6 +19,7 @@ import { Segmented } from '../../components/Segmented';
 import { Amount } from '../../components/Amount';
 import { CategoryGrid } from '../quick-entry/CategoryGrid';
 import { BudgetsSummary } from '../budgets/BudgetsSummary';
+import { WorkSummaryCard } from '../tax/WorkSummaryCard';
 
 export function HomePage() {
   const [type, setType] = useState<CategoryType>('expense');
@@ -82,6 +83,8 @@ export function HomePage() {
           </dd>
         </div>
       </dl>
+
+      {scope !== 'personal' && <WorkSummaryCard today={today} />}
 
       <Segmented
         label="Tipo di movimento"

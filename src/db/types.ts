@@ -153,6 +153,15 @@ export interface TaxParams extends BaseRecord {
   contributionRateBp: number;
   fixedContributionCents: number;
   revenueThresholdCents: number;
+  /**
+   * Advances (acconti) as a share of the previous year's amount ("metodo storico"), used only to
+   * propose the amounts of the fiscal deadlines. Optional: without them nothing is proposed.
+   */
+  taxFirstAdvanceBp?: number;
+  taxSecondAdvanceBp?: number;
+  /** Applied to the proportional part of the contributions (the fixed quota is paid apart). */
+  contributionFirstAdvanceBp?: number;
+  contributionSecondAdvanceBp?: number;
 }
 
 /**

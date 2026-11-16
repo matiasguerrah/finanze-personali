@@ -21,6 +21,7 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/scadenze/, 'Scadenze'],
   [/^\/report/, 'Report'],
   [/^\/altro\/attivita/, 'Attività professionali'],
+  [/^\/altro\/fiscale/, 'Parametri fiscali'],
   [/^\/altro\/conti/, 'Conti'],
   [/^\/altro\/soglie/, 'Soglie di spesa'],
   [/^\/altro\/profilo/, 'Profilo'],

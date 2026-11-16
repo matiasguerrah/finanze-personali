@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { CircleCheck, Plus } from 'lucide-react';
-import { useAccounts, useCategories, useRecurring } from '../../db/hooks';
+import { useAccounts, useCategories, useRecurring, useTaxContext } from '../../db/hooks';
 import { repo } from '../../db/repo';
 import type { Recurring } from '../../db/types';
 import { formatShortDate, todayRome } from '../../lib/dates';
+import { proposalForRecurring } from '../../lib/tax';
 import { dueText, frequencyText, groupByDueStatus, type DueStatus } from '../../lib/recurring';
 import { Amount } from '../../components/Amount';
 import { BusinessBadge } from '../../components/BusinessBadge';
@@ -30,6 +31,7 @@ export function RecurringPage() {
   const today = todayRome();
   const [editing, setEditing] = useState<Recurring | 'new' | null>(null);
   const [paying, setPaying] = useState<Recurring | null>(null);
+  const taxCtx = useTaxContext();
 
   // Wait for accounts too: the forms take their initial account from this list.
   if (list === undefined || accounts.length === 0) return null;
@@ -61,7 +63,20 @@ export function RecurringPage() {
     const account = accounts.find((a) => a.id === r.accountId);
     const needsAttention = status === 'overdue' || status === 'dueSoon';
     let amount: ReactNode;
-    if (r.amountCents === 0) amount = <span className="text-sm text-muted">da definire</span>;
+    const proposal = r.amountCents === 0 && taxCtx ? proposalForRecurring(taxCtx, r) : null;
+    if (proposal)
+      amount = (
+        <span className="flex flex-col items-end">
+          <span className="font-medium">
+            <span className="text-muted">
+              ~<span className="sr-only">circa </span>
+            </span>
+            <Amount cents={proposal.totalCents} />
+          </span>
+          <span className="text-xs text-muted">stima</span>
+        </span>
+      );
+    else if (r.amountCents === 0) amount = <span className="text-sm text-muted">da definire</span>;
     else
       amount = (
         <span className="font-medium">

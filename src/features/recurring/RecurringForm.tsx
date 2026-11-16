@@ -76,8 +76,8 @@ export function RecurringForm({ recurring: r, categories, accounts, onClose }: P
     <Sheet open onClose={onClose} title={r ? 'Modifica ricorrenza' : 'Nuova ricorrenza'}>
       {r?.taxKind && (
         <p className="rounded-xl bg-surface p-3 text-sm text-muted">
-          Scadenza fiscale del regime forfettario. L’importo potrà essere proposto dalla stima delle
-          imposte (dashboard Lavoro).
+          Scadenza fiscale del regime forfettario. Lascia l’importo vuoto per usare quello proposto
+          dalla stima (serve inserire le percentuali degli acconti nei parametri fiscali).
         </p>
       )}
       <label className={labelClass}>

@@ -137,6 +137,10 @@ export const COLUMNS: { [K in SyncedTable]: readonly Col<SyncedRecordMap[K]>[] }
     { name: 'contributionRateBp', kind: 'int' },
     { name: 'fixedContributionCents', kind: 'int' },
     { name: 'revenueThresholdCents', kind: 'int' },
+    { name: 'taxFirstAdvanceBp', kind: 'optInt' },
+    { name: 'taxSecondAdvanceBp', kind: 'optInt' },
+    { name: 'contributionFirstAdvanceBp', kind: 'optInt' },
+    { name: 'contributionSecondAdvanceBp', kind: 'optInt' },
   ]),
   profile: columns<Profile>()([
     { name: 'firstName', kind: 'str' },

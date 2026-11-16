@@ -107,7 +107,7 @@ export function ActivitiesPage() {
   );
 }
 
-function ActivityForm({
+export function ActivityForm({
   activity,
   nextSortOrder,
   onClose,

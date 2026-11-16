@@ -11,9 +11,11 @@ import type {
   ISODate,
   Profile,
   Recurring,
+  TaxParams,
   Transaction,
 } from './types';
 import { accountBalances } from '../lib/balances';
+import type { TaxContext } from '../lib/tax';
 
 const EMPTY: never[] = [];
 
@@ -100,5 +102,22 @@ export function useProfile(): Profile | null | undefined {
   return useLiveQuery(async () => {
     const p = await db.profile.get(PROFILE_ID);
     return p && !p.deleted ? p : null;
+  }, []);
+}
+
+export function useTaxParams(): TaxParams[] | undefined {
+  return useLiveQuery(() => db.taxParams.filter((p) => !p.deleted).sortBy('validFromYear'), []);
+}
+
+/** Everything `lib/tax` needs, or undefined while loading. */
+export function useTaxContext(): TaxContext | undefined {
+  return useLiveQuery(async () => {
+    const [transactions, activities, params, categories] = await Promise.all([
+      db.transactions.filter((t) => !t.deleted).toArray(),
+      db.activities.filter((a) => !a.deleted).toArray(),
+      db.taxParams.filter((p) => !p.deleted).toArray(),
+      db.categories.filter((c) => !c.deleted).toArray(),
+    ]);
+    return { transactions, activities, params, categories };
   }, []);
 }

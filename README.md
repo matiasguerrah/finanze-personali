@@ -34,6 +34,39 @@ In **Report**: panoramica (entrate/uscite, categorie, ultimi 12 mesi, soglie), s
 - **Excel completo**: riepilogo, movimenti, movimenti professionali, riepilogo professionale dell'anno e un foglio per ogni tabella.
 - **Backup JSON** di tutti i dati e **ripristino**: aggiunge i record mancanti e le versioni più recenti, non cancella nulla, e invia al Google Sheet ciò che ripristina.
 
+## Stima del forfettario
+
+È una **stima indicativa, da verificare con il commercialista**: l'app lo ricorda sempre accanto ai numeri.
+
+### Configurazione
+
+L'app non contiene valori fiscali predefiniti: li inserisci tu.
+
+- **Altro › Attività professionali**: nome, codice ATECO, coefficiente di redditività, date di validità. Per cambiare codice crea una nuova attività e chiudi la vecchia con una data di fine: gli incassi già registrati restano alla vecchia.
+- **Altro › Parametri fiscali**, per anno: aliquota dell'imposta sostitutiva, aliquota dei contributi, quota contributiva fissa (0 se non prevista), soglia ricavi annui. Ogni anno usa i parametri con l'anno di validità più recente, così una modifica non cambia le stime degli anni precedenti.
+- Finché mancano attività o parametri, **Report › Professionale** mostra una configurazione guidata in due passi e solo incassi e spese, senza stime.
+
+### Cosa calcola (anno solare, principio di cassa)
+
+- **Reddito imponibile** = somma, per ogni attività, di incassi di lavoro attribuiti × coefficiente.
+- **Contributi stimati** = imponibile × aliquota contributi + quota fissa.
+- **Imposta stimata** = (imponibile − contributi INPS versati nell'anno) × aliquota imposta, mai negativa.
+- **Da accantonare** = contributi + imposta, anche diviso per mese; **netto disponibile** = incassato − accantonamento.
+- **Soglia ricavi**: barra con tutti gli incassi di lavoro dell'anno, avviso all'80% e al 95% (una volta per anno e livello, in app e come notifica di sistema ad app chiusa).
+- **Per attività**: incassi, coefficiente e imponibile (gestisce il cambio di codice a metà anno e più attività contemporanee).
+- **Spese reali e quota forfettaria**: spese di lavoro effettive (escluse imposte e contributi) confrontate con la parte di incassi non tassata. Se le superano: "valuta con il commercialista".
+- **Incassi senza attività valida** (nessuna attività, o attività non attiva in quella data): esclusi dalla stima ed elencati; toccandone uno lo correggi.
+- In **Home**, con il filtro Tutto o Lavoro, una scheda riassume accantonamento, incassato, netto, soglia e incassi da sistemare.
+
+### Importi proposti per le scadenze fiscali
+
+Nei parametri puoi indicare, facoltativamente, le percentuali di 1° e 2° acconto per imposta e contributi (in percentuale dell'importo dell'anno precedente). Con queste, le quattro scadenze fiscali mostrano in **Scadenze** un importo "~ stima" e "Segna come pagata" lo precompila, con il dettaglio. Il calcolo segue il metodo storico:
+
+- **giugno** = saldo dell'anno precedente (stima meno acconti dovuti) + 1° acconto;
+- **novembre** = 2° acconto.
+
+Per i contributi gli acconti valgono sulla parte in percentuale (la quota fissa si paga a parte). Le soglie minime sotto cui gli acconti non sono dovuti non sono gestite.
+
 ## Sincronizzazione con Google Sheet
 
 I dati vivono sul dispositivo (IndexedDB) e vengono copiati in un Google Sheet tramite uno script Apps Script, uno per persona. Non c'è nessun altro server.

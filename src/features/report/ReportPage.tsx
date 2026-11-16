@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../db/db';
 import { useAllTransactions, useCategories } from '../../db/hooks';
 import type { Category, Transaction } from '../../db/types';
 import { excludedFromGlobalBudgets } from '../../lib/budgets';
@@ -25,6 +23,7 @@ import { BudgetsSummary } from '../budgets/BudgetsSummary';
 import { MonthlyChart } from './MonthlyChart';
 import { RankedBars } from './RankedBars';
 import { ExportPanel } from './ExportPanel';
+import { TaxPanel } from '../tax/TaxPanel';
 
 type Tab = 'overview' | 'business' | 'export';
 /** URL segment of each section: #/report, #/report/professionale, #/report/esporta. */
@@ -222,15 +221,11 @@ function Business({
   onYear: (y: number) => void;
   today: string;
 }) {
-  // undefined while loading, so names never flash as "Attività eliminata".
-  const activities = useLiveQuery(() => db.activities.filter((a) => !a.deleted).toArray(), []);
   const fiscal = useMemo(() => excludedFromGlobalBudgets(categories), [categories]);
   const r = useMemo(() => businessReport(txs, year, fiscal), [txs, year, fiscal]);
   const byYear = useMemo(() => businessIncomeByYear(txs), [txs]);
   const years = [...new Set([yearOf(today), ...byYear.map((y) => y.year)])].sort((a, b) => b - a);
   const months = r.months.filter((m) => year < yearOf(today) || m.from <= today);
-
-  if (!activities) return null;
 
   return (
     <>
@@ -262,6 +257,8 @@ function Business({
         </div>
       </dl>
 
+      <TaxPanel year={year} txs={txs} />
+
       {months.length > 0 && (
         <section aria-labelledby="bm-h" className="flex flex-col gap-2 rounded-2xl bg-surface p-4">
           <h2 id="bm-h" className="font-semibold">
@@ -282,26 +279,6 @@ function Business({
           />
         </section>
       )}
-
-      <section aria-labelledby="ba-h" className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
-        <h2 id="ba-h" className="font-semibold">
-          Incassi per attività
-        </h2>
-        <RankedBars
-          totalCents={r.incomeCents}
-          empty="Nessun incasso nell'anno."
-          rows={r.byActivity.map((a) => ({
-            key: a.key || '__none',
-            label: a.key
-              ? (activities.find((x) => x.id === a.key)?.name ?? 'Attività eliminata')
-              : 'Senza attività',
-            cents: a.cents,
-            hint: a.key
-              ? `ATECO ${activities.find((x) => x.id === a.key)?.atecoCode ?? '—'}`
-              : 'da assegnare',
-          }))}
-        />
-      </section>
 
       <section aria-labelledby="bc-h" className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
         <h2 id="bc-h" className="font-semibold">

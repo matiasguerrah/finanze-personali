@@ -13,6 +13,7 @@ import { BudgetsPage } from './features/budgets/BudgetsPage';
 import { ProfilePage } from './features/profile/ProfilePage';
 import { DebtsPage } from './features/debts/DebtsPage';
 import { ReportPage } from './features/report/ReportPage';
+import { TaxParamsPage } from './features/tax/TaxParamsPage';
 import { DebtDetailPage } from './features/debts/DebtDetailPage';
 import { AlertWatcher } from './state/AlertWatcher';
 import { SyncScheduler } from './sync/SyncScheduler';
@@ -34,6 +35,7 @@ export default function App() {
                 <Route path="report/:tab?" element={<ReportPage />} />
                 <Route path="altro" element={<MorePage />} />
                 <Route path="altro/attivita" element={<ActivitiesPage />} />
+                <Route path="altro/fiscale" element={<TaxParamsPage />} />
                 <Route path="altro/conti" element={<AccountsPage />} />
                 <Route path="altro/soglie" element={<BudgetsPage />} />
                 <Route path="altro/profilo" element={<ProfilePage />} />

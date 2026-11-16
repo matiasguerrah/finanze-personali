@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useActivities } from '../../db/hooks';
+import { useEffect, useRef, useState } from 'react';
+import { useActivities, useTaxContext } from '../../db/hooks';
 import type { Account, Category, Recurring } from '../../db/types';
 import { activeActivitiesOn, defaultActivityId } from '../../lib/activities';
 import { formatShortDate, isISODate, todayRome } from '../../lib/dates';
 import { centsToInput, formatCents, parseAmountToCents } from '../../lib/money';
 import { advanceDueDate } from '../../lib/recurring';
+import { DISCLAIMER, proposalForRecurring } from '../../lib/tax';
 import { validateDraft, type TxDraftError } from '../../lib/transactions';
 import { Sheet } from '../../components/Sheet';
 import { inputClass, labelClass, primaryButton } from '../../components/form';
@@ -43,6 +44,16 @@ export function PaySheet({ recurring: r, categories, accounts, onClose }: Props)
   const [note, setNote] = useState(r.name);
   const [activityId, setActivityId] = useState<string | undefined>();
   const [showErrors, setShowErrors] = useState(false);
+
+  // Fiscal deadlines with no fixed amount: propose the one estimated from the previous years.
+  const taxCtx = useTaxContext();
+  const proposal = taxCtx ? proposalForRecurring(taxCtx, r) : null;
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !proposal || r.amountCents > 0) return;
+    prefilled.current = true;
+    setAmount((a) => (a === '' ? centsToInput(proposal.totalCents) : a));
+  }, [proposal, r.amountCents]);
 
   const needsActivity = type === 'income' && r.scope === 'business';
   const activeOnDate = isISODate(date) ? activeActivitiesOn(activities, date) : [];
@@ -95,6 +106,29 @@ export function PaySheet({ recurring: r, categories, accounts, onClose }: Props)
         {formatShortDate(r.nextDueDate)}. Dopo il salvataggio la prossima scadenza diventa il{' '}
         {formatShortDate(advanceDueDate(r.nextDueDate, r))}.
       </p>
+      {proposal && (
+        <div className="flex flex-col gap-1 rounded-xl bg-surface p-3 text-sm">
+          <span className="font-medium">
+            Importo proposto dalla stima: {formatCents(proposal.totalCents)}
+          </span>
+          {proposal.parts.map((p) => (
+            <span key={p.label} className="flex justify-between text-muted tabular-nums">
+              <span>{p.label}</span>
+              <span>{formatCents(p.cents)}</span>
+            </span>
+          ))}
+          <span className="text-xs text-muted">{DISCLAIMER}</span>
+          {amountCents !== proposal.totalCents && (
+            <button
+              type="button"
+              onClick={() => setAmount(centsToInput(proposal.totalCents))}
+              className="mt-1 min-h-11 self-start rounded-xl bg-surface-2 px-3 font-medium"
+            >
+              Usa questo importo
+            </button>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <label className={labelClass}>
           Importo pagato (€)
