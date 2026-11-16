@@ -18,7 +18,7 @@ npm test               # Vitest, all
 npx vitest run src/lib/money.test.ts -t "applyBp"   # single file / test
 ```
 
-GitHub Pages builds set `BASE_PATH=/<repo>/` (read in `vite.config.ts`). Routing uses `HashRouter` so no server rewrites are needed.
+Deploy: every push to `main` runs `.github/workflows/deploy.yml` (lint, test, build with `BASE_PATH=/<repo>/` read in `vite.config.ts`, deploy to GitHub Pages) → https://matiasguerrah.github.io/finanze-personali/. The repo is public: never commit personal data (test fixtures use a fictitious "Mario Rossi"). Routing uses `HashRouter` so no server rewrites are needed.
 
 ## Architecture rules (non-negotiable)
 

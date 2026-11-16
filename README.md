@@ -16,6 +16,16 @@ npm run lint && npm run typecheck
 npm run build && npm run preview   # build di produzione con service worker (prova offline)
 ```
 
+## Pubblicazione (GitHub Pages)
+
+L'app è online su **https://matiasguerrah.github.io/finanze-personali/**.
+
+Ogni push su `main` avvia il workflow `.github/workflows/deploy.yml`: lint, test, build con `BASE_PATH=/finanze-personali/` e pubblicazione. Se un controllo fallisce, resta online la versione precedente. Stato dei deploy: scheda **Actions** del repository.
+
+Il repository è pubblico ma contiene solo il codice: i dati stanno nel browser di ogni dispositivo e nel tuo Google Sheet; URL e chiave dello script si inseriscono in **Altro › Sincronizzazione** e restano sul dispositivo.
+
+Dopo un aggiornamento, l'app scarica la nuova versione in background all'apertura e si ricarica da sola; i dati non vengono toccati.
+
 ## Sincronizzazione con Google Sheet
 
 I dati vivono sul dispositivo (IndexedDB) e vengono copiati in un Google Sheet tramite uno script Apps Script, uno per persona. Non c'è nessun altro server.
