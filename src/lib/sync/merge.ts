@@ -119,6 +119,10 @@ export const COLUMNS: { [K in SyncedTable]: readonly Col<SyncedRecordMap[K]>[] }
   ]),
   debts: columns<Debt>()([
     { name: 'name', kind: 'str' },
+    { name: 'state', kind: 'str' },
+    { name: 'noticeAmountCents', kind: 'optInt' },
+    { name: 'noticeDueDate', kind: 'optStr' },
+    { name: 'rateizedAt', kind: 'optStr' },
     { name: 'creditor', kind: 'str' },
     { name: 'principalCents', kind: 'int' },
     { name: 'annualRateBp', kind: 'int' },

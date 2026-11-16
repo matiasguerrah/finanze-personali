@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { ArrowLeftRight, Briefcase, ChevronDown, User } from 'lucide-react';
 import { repo, setSetting } from '../../db/repo';
-import type { Account, Activity, Category, Scope, Transaction, TxType } from '../../db/types';
+import type { Account, Activity, Category, Debt, Scope, Transaction, TxType } from '../../db/types';
 import { Sheet } from '../../components/Sheet';
 import { Keypad } from '../../components/Keypad';
 import { Segmented } from '../../components/Segmented';
@@ -33,6 +33,7 @@ export interface EntryData {
   categories: Category[];
   accounts: Account[];
   activities: Activity[];
+  debts: Debt[];
   lastAccountId: string;
 }
 
@@ -45,7 +46,8 @@ interface Props {
 
 export function EntrySheet({ request, data, onClose }: Props) {
   const editing = request.mode === 'edit' ? request.tx : undefined;
-  const { categories, accounts, activities, lastAccountId } = data;
+  const { categories, accounts, activities, debts, lastAccountId } = data;
+  const newReq = request.mode === 'new' ? request : undefined;
   const { scope: scopeFilter } = useScopeFilter();
   const toast = useToast();
 
@@ -59,7 +61,14 @@ export function EntrySheet({ request, data, onClose }: Props) {
   const [step, setStep] = useState<'category' | 'amount'>(
     categoryId || isTransfer ? 'amount' : 'category',
   );
-  const [amount, setAmount] = useState(editing ? centsToInput(editing.amountCents) : '');
+  const [amount, setAmount] = useState(
+    editing
+      ? centsToInput(editing.amountCents)
+      : newReq?.amountCents
+        ? centsToInput(newReq.amountCents)
+        : '',
+  );
+  const [debtId, setDebtId] = useState(editing?.debtId ?? newReq?.debtId ?? '');
   const [accountId, setAccountId] = useState(
     () =>
       editing?.accountId ??
@@ -139,6 +148,7 @@ export function EntrySheet({ request, data, onClose }: Props) {
       invoiceNumber:
         business && type === 'income' && invoiceNumber.trim() ? invoiceNumber.trim() : undefined,
       client: business && type === 'income' && client.trim() ? client.trim() : undefined,
+      debtId: type === 'expense' && debtId ? debtId : undefined,
     } satisfies Partial<Transaction>;
 
     await setSetting('lastAccountId', accountId);
@@ -401,6 +411,23 @@ export function EntrySheet({ request, data, onClose }: Props) {
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
+            {type === 'expense' && debts.length > 0 && (
+              <label className="flex flex-col gap-1 text-xs text-muted">
+                Collega a un debito (facoltativo)
+                <select
+                  className={inputClass + ' text-fg'}
+                  value={debtId}
+                  onChange={(e) => setDebtId(e.target.value)}
+                >
+                  <option value="">Nessuno</option>
+                  {debts.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             {showMore ? (
               <input
                 className={inputClass}

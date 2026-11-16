@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ContiDB } from './db';
 import { createRepo } from './repo';
 import {
+  DEBT_PAYMENTS_CATEGORY_ID,
   DEFAULT_ACCOUNT_ID,
   defaultCategories,
   defaultFiscalRecurrences,
@@ -81,7 +82,14 @@ describe('seed', () => {
   it('is idempotent and uses fixed ids and old timestamps', async () => {
     await runSeed(db);
     await runSeed(db);
-    expect(await db.categories.count()).toBe(defaultCategories().length);
+    // + "Rate e prestiti" from step 3.
+    expect(await db.categories.count()).toBe(defaultCategories().length + 1);
+    const debtCat = await db.categories.get(DEBT_PAYMENTS_CATEGORY_ID);
+    expect(debtCat).toMatchObject({
+      systemKey: 'debtPayments',
+      type: 'expense',
+      updatedAt: SEED_TIMESTAMP,
+    });
     const acc = await db.accounts.get(DEFAULT_ACCOUNT_ID);
     expect(acc?.updatedAt).toBe(SEED_TIMESTAMP);
     const inps = (await db.categories.toArray()).filter((c) => c.systemKey === 'inps');

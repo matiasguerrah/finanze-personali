@@ -90,6 +90,10 @@ const FULL: { [K in SyncedTable]: SyncedRecordMap[K] } = {
   debts: {
     ...base,
     name: 'Prestito auto',
+    state: 'installments',
+    noticeAmountCents: 950000,
+    noticeDueDate: '2025-12-15',
+    rateizedAt: '2025-12-10T09:00:00.000Z',
     creditor: 'Banca',
     principalCents: 1000000,
     annualRateBp: 450,

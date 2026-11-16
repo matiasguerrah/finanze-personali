@@ -55,8 +55,9 @@ describe('sync between two devices', () => {
     const r = await runSync(laptop, transport, key);
 
     expect(await laptop.transactions.get(created.id)).toEqual(created);
-    expect(await laptop.categories.count()).toBe(defaultCategories().length);
-    expect(server.sheets.get('categories')!.objects()).toHaveLength(defaultCategories().length);
+    const seeded = defaultCategories().length + 1; // + debt payments category (seed step 3)
+    expect(await laptop.categories.count()).toBe(seeded);
+    expect(server.sheets.get('categories')!.objects()).toHaveLength(seeded);
     expect(r.skipped).toEqual([]);
     expect(await phone.outbox.count()).toBe(0);
     expect(await laptop.outbox.count()).toBe(0);

@@ -57,7 +57,7 @@ export interface Activity extends BaseRecord {
 }
 
 /** Categories the app logic needs to recognise regardless of their (editable) name. */
-export type CategorySystemKey = 'inps' | 'substituteTax' | 'invoices';
+export type CategorySystemKey = 'inps' | 'substituteTax' | 'invoices' | 'debtPayments';
 
 export interface Category extends BaseRecord {
   name: string;
@@ -120,8 +120,24 @@ export interface Recurring extends BaseRecord {
   taxKind?: TaxKind;
 }
 
+/**
+ * notice: a single amount due by a date (e.g. avviso bonario, cartella).
+ * installments: a monthly repayment plan (loan, or a notice that has been rateizzato).
+ */
+export type DebtState = 'notice' | 'installments';
+
 export interface Debt extends BaseRecord {
   name: string;
+  state: DebtState;
+  /** Amount and due date of the original notice; kept after it becomes a plan. */
+  noticeAmountCents?: number;
+  noticeDueDate?: ISODate;
+  /**
+   * When a notice became a plan (ISO UTC timestamp): payments recorded before it paid the notice,
+   * not the plan. A timestamp, not a date, so a partial payment and the rateizzazione on the same
+   * day are still told apart.
+   */
+  rateizedAt?: string;
   creditor: string;
   principalCents: number;
   annualRateBp: number;

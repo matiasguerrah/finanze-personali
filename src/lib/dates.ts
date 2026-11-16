@@ -99,3 +99,8 @@ export function formatDayHeading(s: ISODate, today: ISODate = todayRome()): stri
 export function formatShortDate(s: ISODate): string {
   return format(fromISODate(s), 'd MMM yyyy', { locale: it });
 }
+
+/** "gen 2027": month and year, for payoff dates and chart axes. */
+export function formatMonthYear(s: ISODate): string {
+  return format(fromISODate(s), 'MMM yyyy', { locale: it });
+}

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Briefcase, ChevronRight, Cloud, Gauge, UserRound, Wallet } from 'lucide-react';
+import { Banknote, Briefcase, ChevronRight, Cloud, Gauge, UserRound, Wallet } from 'lucide-react';
 
 const ITEMS = [
   {
@@ -13,6 +13,12 @@ const ITEMS = [
     label: 'Conti',
     hint: 'Saldi, giroconti, conti archiviati',
     icon: Wallet,
+  },
+  {
+    to: '/altro/debiti',
+    label: 'Debiti',
+    hint: 'Prestiti e finanziamenti: rate, residuo, estinzione',
+    icon: Banknote,
   },
   {
     to: '/altro/soglie',

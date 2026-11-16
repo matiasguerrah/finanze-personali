@@ -179,6 +179,20 @@ export function defaultFiscalRecurrences(today: string): Recurring[] {
   }));
 }
 
+/** Expense category proposed when paying an installment from the Debiti page (seed step 3). */
+export const DEBT_PAYMENTS_CATEGORY_ID = seedId(1, 18);
+
+export function debtPaymentsCategory(): Category {
+  // sortOrder 18: after the step-1 personal categories, which cannot be renumbered.
+  return category(
+    DEBT_PAYMENTS_CATEGORY_ID,
+    ['Rate e prestiti', 'Banknote', 'red', 'debtPayments'],
+    'expense',
+    'personal',
+    18,
+  );
+}
+
 /** Ordered seed steps. Append new steps; never change or reorder existing ones. */
 const STEPS: Array<(db: ContiDB) => Promise<void>> = [
   async (db) => {
@@ -198,6 +212,12 @@ const STEPS: Array<(db: ContiDB) => Promise<void>> = [
     const existing = new Set((await db.recurring.toCollection().primaryKeys()) as string[]);
     const rows = defaultFiscalRecurrences(todayRome()).filter((r) => !existing.has(r.id));
     await repo.putRaw('recurring', rows, { enqueue: true });
+  },
+  // 3: category for debt installments (phase 5).
+  async (db) => {
+    const repo = createRepo(db);
+    if (await db.categories.get(DEBT_PAYMENTS_CATEGORY_ID)) return;
+    await repo.putRaw('categories', [debtPaymentsCategory()], { enqueue: true });
   },
 ];
 

@@ -7,6 +7,7 @@ import type {
   Activity,
   Budget,
   Category,
+  Debt,
   ISODate,
   Profile,
   Recurring,
@@ -75,6 +76,18 @@ export function useAccountUsage(): Map<string, number> | undefined {
 
 export function useBudgets(): Budget[] | undefined {
   return useLiveQuery(() => db.budgets.filter((b) => !b.deleted).toArray(), []);
+}
+
+export function useDebts(): Debt[] | undefined {
+  return useLiveQuery(() => db.debts.filter((d) => !d.deleted).sortBy('startDate'), []);
+}
+
+/** Non-deleted expenses linked to any debt. */
+export function useDebtPayments(): Transaction[] | undefined {
+  return useLiveQuery(
+    () => db.transactions.filter((t) => !!t.debtId && !t.deleted && t.type === 'expense').toArray(),
+    [],
+  );
 }
 
 /** The owner profile; null when never saved. */

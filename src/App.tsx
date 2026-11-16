@@ -12,6 +12,8 @@ import { AccountsPage } from './features/accounts/AccountsPage';
 import { RecurringPage } from './features/recurring/RecurringPage';
 import { BudgetsPage } from './features/budgets/BudgetsPage';
 import { ProfilePage } from './features/profile/ProfilePage';
+import { DebtsPage } from './features/debts/DebtsPage';
+import { DebtDetailPage } from './features/debts/DebtDetailPage';
 import { AlertWatcher } from './state/AlertWatcher';
 import { SyncScheduler } from './sync/SyncScheduler';
 import { SyncSettingsPage } from './sync/SyncSettingsPage';
@@ -36,6 +38,8 @@ export default function App() {
                 <Route path="altro/soglie" element={<BudgetsPage />} />
                 <Route path="altro/profilo" element={<ProfilePage />} />
                 <Route path="altro/sync" element={<SyncSettingsPage />} />
+                <Route path="altro/debiti" element={<DebtsPage />} />
+                <Route path="altro/debiti/:id" element={<DebtDetailPage />} />
               </Route>
             </Routes>
           </HashRouter>
